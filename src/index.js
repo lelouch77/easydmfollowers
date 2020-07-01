@@ -9,12 +9,12 @@ import { CAMPAIGN_MESSAGE_STATUS } from './constants';
 import { stillNowTimeFilter, processFilters } from './utils/common';
 
 class EasyDMCore {
-    constructor(connectionString) {
+    constructor(connectionString, notifier = () => { }) {
         this.connectionString = connectionString;
         this.db = initDB(connectionString);
-        this.twitterAdapter = new TwitterAdapter();
+        this.twitterAdapter = new TwitterAdapter(notifier);
         this.TwitterAdapter = TwitterAdapter;
-        this.campaignAdapter = new CampaignAdapter(this.twitterAdapter);
+        this.campaignAdapter = new CampaignAdapter(this.twitterAdapter, notifier);
     }
 
     // --- Twitter Adapter --- //
@@ -53,7 +53,7 @@ class EasyDMCore {
         return (await createList({ name, description, filters })).toJSON();
     }
 
-    async updateSegment( id, properties ) {
+    async updateSegment(id, properties) {
         return (await updateList(id, properties)).toJSON();
     }
 
@@ -61,11 +61,11 @@ class EasyDMCore {
         const lists = (await getAllLists());
 
         let segments = [];
-        for( let list of lists ){
+        for (let list of lists) {
             list = list.toJSON();
             segments.push({
                 ...list,
-                count: await findUsersCount({where:processFilters(list.filters)})
+                count: await findUsersCount({ where: processFilters(list.filters) })
             });
         }
 
@@ -136,7 +136,7 @@ class EasyDMCore {
             }
             return map;
         }, {
-            UNSEND : 0,
+            UNSEND: 0,
             SENT: 0,
             FAILED: 0
         });
