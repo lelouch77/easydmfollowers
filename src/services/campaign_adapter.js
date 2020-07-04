@@ -4,7 +4,8 @@ import { scheduleCron } from './cron-service';
 import { JOB_STATUS, CAMPAIGN_MESSAGE_STATUS, CAMPAIGN_STATUS } from '../constants';
 import { isToday, getCurrentTimeMinutes, getTimeStamp } from '../utils/common'
 class CampaignAdapter {
-    constructor(twitterAdapter) {
+    constructor(twitterAdapter, notifier) {
+        this.notifier = notifier;
         this.campaignCronMap = {};
         this.twitterAdapter = twitterAdapter;
         this.init();
@@ -82,11 +83,13 @@ class CampaignAdapter {
             id: campaign.get("id"),
             limit: noOfMessagesCanBeSent,
         });
+        let successfulDMCount = 0;
         for (let campaignUser of campaignUsers) {
             const user = await campaignUser.getUser();
             try {
-                await this.twitterAdapter.sendDM({text:message, user:user.toJSON()});
+                await this.twitterAdapter.sendDM({ text: message, user: user.toJSON() });
                 campaignUser.status = CAMPAIGN_MESSAGE_STATUS.SEND;
+                successfulDMCount++;
             }
             catch (e) {
                 if (e.errors[0].code === 88) {
@@ -101,6 +104,10 @@ class CampaignAdapter {
                 await campaignUser.save()
             }
         }
+        this.notifier({
+            title: `${campaign.get("name")} successful`,
+            body: `${successfulDMCount} DMs sent`
+        })
         const hasActiveUsers = (await getCampaignScheduledUsers({
             id: campaign.get("id"),
             limit: 1

@@ -2,15 +2,16 @@ import Twitter from 'twitter-lite';
 import { setVariables, getVariables, getVariable } from './state_variables';
 import { getActiveJob, scheduleNewJob, closeActiveJob } from './follower-job';
 import { scheduleCron } from './cron-service';
-import { bulkCreate, findUnSyncedUsers, findUser } from './user';
+import { bulkCreate, findUnSyncedUsers, findUser, findUsersCount } from './user';
 import { TWITTER_CLIENT_STATE, FOLLOWER_SYNC_STATUS, SEND_MESSAGE_ENABLED } from '../constants';
 import logger from '../utils/logger';
 class TwitterAdapter {
 
-    constructor() {
+    constructor(notifier) {
         this.clientState = TWITTER_CLIENT_STATE.NOT_INITIALIZED;
         this.isSyncingFollowersDetail = false;
         this.totalFollowersSynced = 0;
+        this.notifier = notifier;
     }
 
     verifyAndSetTwitterKeys = async ({ consumer_key, consumer_secret, access_token_key, access_token_secret }, reset) => {
@@ -27,7 +28,7 @@ class TwitterAdapter {
             logger.info("TwitterAdapter -> setTwitterKeys -> Credentials Verified");
             const existingUserID = await getVariable("id_str");
             if (existingUserID && existingUserID !== authResponse.id_str) {
-            logger.info("New user key found resetting all tables");
+                logger.info("New user key found resetting all tables");
                 await reset();
             }
             await setVariables([
@@ -187,6 +188,8 @@ class TwitterAdapter {
                     logger.info("syncFollowersDetail -> unSyncedFollowerIds", unSyncedFollowerIds.length);
                 }
             }
+            const allUserCount = await findUsersCount();
+            this.notifier({ title: "Followers Synced", body: `${allUserCount} followers loaded` });
             this.isSyncingFollowersDetail = false;
         }
     }
