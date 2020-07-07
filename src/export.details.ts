@@ -1,4 +1,4 @@
-const EXPORTED_METHODS = [
+const EXPORTED_METHOD_NAMES = [
     "getUserObject", "syncFollowers", "setKeys",
     "getPaginatedFollowers", "getFollowers", "getFollowersCount",
     "createSegment", "deleteSegment", "updateSegment", "getSegments", "getSegment",
@@ -7,4 +7,4 @@ const EXPORTED_METHODS = [
      "getAllMissedCampaigns","getCampaignStatus", "messagesSentToday"
 ]
 
-export default EXPORTED_METHODS;
+export default EXPORTED_METHOD_NAMES;

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="jest tests" tests="4" failures="0" time="4.461">
+  <testsuite name="Initial User Setup" errors="0" failures="0" skipped="0" timestamp="2020-07-05T06:50:13" time="3.596" tests="4">
+    <testcase classname="Initial User Setup User name match" name="Initial User Setup User name match" time="0.491">
+    </testcase>
+    <testcase classname="Initial User Setup Filter 1 Creation" name="Initial User Setup Filter 1 Creation" time="0.025">
+    </testcase>
+    <testcase classname="Initial User Setup Filter 2 Creation" name="Initial User Setup Filter 2 Creation" time="0.005">
+    </testcase>
+    <testcase classname="Initial User Setup Create Campaign" name="Initial User Setup Create Campaign" time="0.024">
+    </testcase>
+  </testsuite>
+</testsuites>

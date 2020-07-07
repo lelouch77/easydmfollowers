@@ -1,4 +1,4 @@
-import { and, or, gt, gte, lt, lte, eq, substring } from 'sequelize/lib/operators';
+import { Op } from 'sequelize';
 export const FOLLOWER_SYNC_STATUS = {
     NOT_SYNCED: 10,
     FAILED: 30,
@@ -44,14 +44,14 @@ export const MAX_USERS_LOOKUP_LIMIT = 100;
 export const DAILY_DM_LIMIT = 1000;
 
 export const FILTER_OPERATOR_MAP = {
-    EQ: eq,
-    OR: or,
-    AND: and,
-    GT: gt,
-    GTE: gte,
-    LT: lt,
-    LTE: lte,
-    CONTAINS: substring
+    EQ: Op.eq,
+    OR: Op.or,
+    AND: Op.and,
+    GT: Op.gt,
+    GTE: Op.gte,
+    LT: Op.lt,
+    LTE: Op.lte,
+    CONTAINS: Op.substring
 };
 
 export const SEND_MESSAGE_ENABLED = true;

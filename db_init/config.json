@@ -2,6 +2,10 @@
   "development": {
     "dialect": "sqlite",
     "storage": "jupiter.sqlite"
+  },
+  "production": {
+    "dialect": "sqlite",
+    "storage": "jupiter.sqlite"
   }
 }
 

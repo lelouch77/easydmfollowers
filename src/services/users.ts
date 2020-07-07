@@ -1,10 +1,12 @@
-import Op from 'sequelize/lib/operators';
+import { Op } from 'sequelize';
 import db from '../models';
-import { getLists } from './list';
+import { UserAttributes, User } from '../models/user';
+import { getSegments } from './segments';
 import { FOLLOWER_SYNC_STATUS, MAX_QUERY_LIMIT, MAX_QUERY_LIMIT_RAW, MAX_USERS_LOOKUP_LIMIT } from '../constants';
 import { processFilters } from '../utils/common';
+import { UserPaginationOptions, PaginationOptions } from '../types';
 
-const addBaseCondition = (where) => {
+const addBaseCondition = (where: any) => {
     where = where || {};
     if (where[Op.and]) {
         where[Op.and].status = FOLLOWER_SYNC_STATUS.SYNCED;
@@ -17,14 +19,14 @@ const addBaseCondition = (where) => {
     return where;
 }
 
-export const bulkCreate = async (users) => {
+export const bulkCreate = async (users: UserAttributes[]) => {
     return await db.User.bulkCreate(users, { updateOnDuplicate: ["screen_name", "name", "location", "followers_count", "friends_count", "statuses_count", "verified", "protected", "description", "listed_count", "favourites_count", "statuses_count", "default_profile", "default_profile_image", "profile_image_url_https", "status"] });
 }
 
-export const findAllPaginatedUsers = async ({ where, order, limit, offset, segmentIds }) => {
+export const findAllPaginatedUsers = async ({ where, order, limit, offset, segmentIds }: UserPaginationOptions) => {
     if (segmentIds && segmentIds.length !== 0) {
         where = {
-            [Op.or]: (await getLists(segmentIds)).map(list => processFilters(list.get("filters")))
+            [Op.or]: (await getSegments(segmentIds)).map(list => processFilters(list.get("filters")))
         }
     }
     else if (where) {
@@ -38,11 +40,11 @@ export const findAllPaginatedUsers = async ({ where, order, limit, offset, segme
         limit,
         offset,
         where,
-        order
+        order: <any>order
     });
 }
 
-export const findAllPaginatedUsersRaw = async ({ where, order, limit, offset }) => {
+export const findAllPaginatedUsersRaw = async ({ where, order, limit, offset }: PaginationOptions): Promise<User[]> => {
     if (!limit || limit > MAX_QUERY_LIMIT_RAW) {
         limit = MAX_QUERY_LIMIT_RAW;
     }
@@ -51,17 +53,11 @@ export const findAllPaginatedUsersRaw = async ({ where, order, limit, offset }) 
         limit,
         offset,
         where,
-        order
-    });
-}
-export const findAllUsers = async ({ where }) => {
-    where = addBaseCondition(where);
-    return await db.User.findAll({
-        where
+        order: <any>order
     });
 }
 
-export const findUsersCount = async ({ where }) => {
+export const findUsersCount = async ({ where }: { where?: any }) => {
     where = addBaseCondition(where);
     return await db.User.count({
         where
@@ -77,7 +73,7 @@ export const findUnSyncedUsers = async () => {
     });
 }
 
-export const findUser = async (where) => {
+export const findUser = async (where?: any) => {
     return await db.User.findOne({ where });
 }
 

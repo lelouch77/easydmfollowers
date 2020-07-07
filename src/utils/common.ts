@@ -1,11 +1,12 @@
-import { between } from 'sequelize/lib/operators';
+import { Op } from 'sequelize';
 import { FILTER_OPERATOR_MAP } from '../constants';
+import { Filter } from '../types';
 export const getCurrentTimeMinutes = () => {
     const now = new Date();
     return (now.getHours() * 60) + now.getMinutes();
 }
 
-export const getTimeStamp = (minutes, dayOffset = 0) => {
+export const getTimeStamp = (minutes: number, dayOffset: number = 0) => {
     const date = new Date();
     date.setHours(Math.floor(minutes / 60), minutes % 60, 0);
     if (dayOffset) {
@@ -15,28 +16,28 @@ export const getTimeStamp = (minutes, dayOffset = 0) => {
     return date;
 }
 
-export const isToday = (timestamp) => {
+export const isToday = (timestamp: Date) => {
     const now = new Date();
     return now.getDate() === timestamp.getDate()
         && now.getMonth() === timestamp.getMonth()
         && now.getFullYear() === timestamp.getFullYear()
 }
 
-export const processFilters = ({ filterType, conditions }) => {
-    const conditionsMap = {};
-    filterType = FILTER_OPERATOR_MAP[filterType];
+export const processFilters = ({ filterType, conditions }: Filter) => {
+    const conditionsMap: any = {};
+    const filterTypeOp = FILTER_OPERATOR_MAP[filterType];
     conditions.forEach(condition => {
         const operator = FILTER_OPERATOR_MAP[condition.operator];
         if (!conditionsMap[condition.id]) {
             conditionsMap[condition.id] = {
-                [filterType]: []
+                [filterTypeOp]: []
             };
         }
-        conditionsMap[condition.id][filterType].push({
+        conditionsMap[condition.id][filterTypeOp].push({
             [operator]: condition.value
         });
     });
-    return { [filterType]: conditionsMap }
+    return { [filterTypeOp]: conditionsMap }
 
 }
 
@@ -44,6 +45,6 @@ export const stillNowTimeFilter = () => {
     const _12AMTime = new Date();
     _12AMTime.setHours(0, 0, 0);
     return {
-        [between]: [_12AMTime, new Date()]
+        [<any>Op.between]: [_12AMTime, new Date()]
     }
 }

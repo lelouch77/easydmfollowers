@@ -1,13 +1,14 @@
 import db from '../models';
+import { FollowersJob } from '../models/followers_job'
 import { JOB_STATUS } from '../constants'
 
-export const closeActiveJob = async (activeJob) => {
+export const closeActiveJob = async (activeJob: FollowersJob) => {
     activeJob.status = JOB_STATUS.DONE;
     activeJob.ran_at = new Date();
     await activeJob.save();
 }
 
-export const scheduleNewJob = async ({ cursor, scheduled }) => {
+export const scheduleNewJob = async ({ cursor, scheduled }: { cursor: string, scheduled: Date }) => {
     const activeJob = await getActiveJob();
     const newJob = await db.FollowersJob.create({
         cursor,

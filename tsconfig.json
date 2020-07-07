@@ -1,0 +1,19 @@
+{
+    "compilerOptions": {
+        "composite": true,
+        "outDir": "./dist/",
+        "sourceMap": true,
+        "module": "CommonJS",
+        "target": "ES2017",
+        "strict": true,
+        "moduleResolution": "node",
+    },
+    "include": [
+        "src/**/*"
+    ],
+    "types": [
+        "node",
+        "bluebird",
+        "sequelize"
+    ]
+}

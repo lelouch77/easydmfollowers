@@ -1,32 +1,38 @@
-import Op from 'sequelize/lib/operators';
-import db from '../models';
-import { getLists } from './list';
+import { Op } from 'sequelize';
+import db from '../models/index';
+import { CampaignAttributes } from '../models/campaign';
+import { getSegments } from './segments';
 import { CAMPAIGN_STATUS, MAX_QUERY_LIMIT_RAW, MAX_QUERY_LIMIT, CAMPAIGN_MESSAGE_STATUS } from '../constants';
-import { findAllPaginatedUsersRaw } from './user';
+import { findAllPaginatedUsersRaw } from './users';
 import { processFilters } from '../utils/common';
+import { PaginationOptions, CampaignUpdateAttributes, CampaignCreateAttribute, CampaignUserPaginationOptions } from '../types';
+import { User } from '../models/user';
+import { any } from 'bluebird';
 
-export const getCampaign = async (id) => {
+export const getCampaign = async (id: number) => {
     return await db.Campaign.findByPk(id);
 }
-export const getCampaignStatus = async (where) => {
-    if(where && where.id){
+export const getCampaignStatus = async (where: any) => {
+    if (where && where.id) {
         where.campaign_id = where.id;
         delete where.id;
     }
     return await db.CampaignUser.findAll({
         group: ['status'],
-        attributes: ['status', [db.sequelize.fn('COUNT', 'id'), 'status_count']],
+        attributes: ['status', [db.Sequelize.fn('COUNT', 'id'), 'status_count']],
         where
     });
 }
 
-export const updateCampaign = async (id, properties) => {
+export const updateCampaign = async (id: number, properties: CampaignUpdateAttributes) => {
     const campaign = await db.Campaign.findByPk(id);
+    if (!campaign) return null;
     campaign.update(properties);
     return await campaign.save();
 }
-export const deleteCampaign = async (campaign_id) => {
+export const deleteCampaign = async (campaign_id: number) => {
     const campaign = await db.Campaign.findByPk(campaign_id);
+    if (!campaign) return null;
     await db.CampaignUser.destroy({
         where: { campaign_id }
     })
@@ -40,22 +46,21 @@ export const getAllActiveCampaign = async () => {
     return await db.Campaign.findAll({ where: { status: CAMPAIGN_STATUS.SCHEDULED } });
 }
 
-export const getAllCampaigns = async (params) => {
+export const getAllCampaigns = async (params: any) => {
     return await db.Campaign.findAll(params);
 }
 
-export const createCampaign = async ({ name, message, allocated_msg_count, description, segmentIds = [], order, scheduled_time }) => {
+export const createCampaign = async ({ name, message, allocated_msg_count, description, segmentIds = [], order, scheduled_time }: CampaignCreateAttribute) => {
 
-    let where = {};
-    const metadata = { order }
+    let where: any = {};
+    const metadata: any = { order }
     if (segmentIds.length !== 0) {
-        const lists = await getLists(segmentIds);
+        const lists = await getSegments(segmentIds);
         where[Op.or] = [];
         metadata.segments = [];
         lists.forEach(list => {
-            list = list.toJSON();
-            where[Op.or].push(processFilters(list.filters));
-            metadata.segments.push(list);
+            where[Op.or].push(processFilters(list.get("filters")));
+            metadata.segments.push(list.toJSON());
         });
     }
     const campaign = await db.Campaign.create({
@@ -69,18 +74,17 @@ export const createCampaign = async ({ name, message, allocated_msg_count, descr
     });
 
     let offset = 0;
-    let users;
+    let users: User[];
     do {
         users = await findAllPaginatedUsersRaw({ offset, where, order });
         await campaign.addUsers(users);
         offset = offset + MAX_QUERY_LIMIT_RAW
     } while (users.length >= MAX_QUERY_LIMIT_RAW);
-    users = null;
     return campaign;
 }
 
 
-export const getCampaignUserPaginated = async ({ id, limit, offset, order }) => {
+export const getCampaignUserPaginated = async ({ id, limit, offset, order }: CampaignUserPaginationOptions) => {
     if (!limit || limit > MAX_QUERY_LIMIT) {
         limit = MAX_QUERY_LIMIT;
     }
@@ -90,14 +94,14 @@ export const getCampaignUserPaginated = async ({ id, limit, offset, order }) => 
         },
         offset,
         limit,
-        order,
+        order: (<any>order),
         include: [{
             model: db.User,
         }]
     })
 }
 
-export const getCampaignScheduledUsers = async ({ id, limit }) => {
+export const getCampaignScheduledUsers = async ({ id, limit }: { id: number, limit: number }) => {
     return await db.CampaignUser.findAll({
         where: {
             campaign_id: id,
